@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Construye una Amina - Simulador PhET Style</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Estilo visual simulador PhET */
+        body { background-color: #f4f5f7; font-family: system-ui, -apple-system, sans-serif; }
+        .phet-container { background: white; border: 2px solid #cbd5e1; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between select-none">
+
+    <!-- Barra Superior Estilo PhET -->
+    <header class="bg-slate-900 text-white px-6 py-3 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="bg-amber-500 text-slate-950 font-black px-3 py-1 rounded text-sm tracking-wider uppercase">PhET Interactive</span>
+            <h1 class="text-lg font-bold">Simulador IUPAC: Aminas (1°, 2°, 3°)</h1>
+        </div>
+        <div class="text-xs text-slate-400">Capacidad: hasta 30 Carbonos</div>
+    </header>
+
+    <!-- Área de Trabajo Principal -->
+    <main class="max-w-7xl mx-auto p-4 w-full grid grid-cols-1 lg:grid-cols-4 gap-4 flex-grow my-2">
+        
+        <!-- Panel Lateral Izquierdo (Controles de Átomos y Cadenas) -->
+        <div class="phet-container p-5 lg:col-span-1 flex flex-col justify-between space-y-4">
+            <div>
+                <h2 class="text-md font-bold text-slate-800 border-b pb-2 mb-3 flex items-center justify-between">
+                    <span>Configuración</span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                </h2>
+
+                <!-- Selector de Tipo de Amina -->
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Tipo de Amina:</label>
+                    <select id="amineType" class="w-full border border-slate-300 rounded-lg p-2 text-sm bg-slate-50 focus:ring-2 focus:ring-blue-500 outline-none font-semibold">
+                        <option value="1">Amina Primaria (1°)</option>
+                        <option value="2">Amina Secundaria (2°)</option>
+                        <option value="3">Amina Terciaria (3°)</option>
+                    </select>
+                </div>
+
+                <!-- Deslizador de Carbonos (Hasta 30) -->
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-1">Cadena Principal (C):</label>
+                    <input type="range" id="mainCarbons" min="1" max="30" value="4" class="w-full accent-blue-600 cursor-pointer">
+                    <div class="text-right text-xs font-bold text-blue-700 mt-1"><span id="mainCount">4</span> Carbonos</div>
+                </div>
+
+                <!-- Controles para Amina Secundaria -->
+                <div id="secControl" class="mb-4 hidden">
+                    <label class="block text-xs font-bold text-emerald-700 uppercase mb-1">1er Sustituyente en N (C):</label>
+                    <input type="range" id="secCarbons" min="1" max="15" value="2" class="w-full accent-emerald-600 cursor-pointer">
+                    <div class="text-right text-xs font-bold text-emerald-700 mt-1"><span id="secCount">2</span> Carbonos (-etil)</div>
+                </div>
+
+                <!-- Controles para Amina Terciaria -->
+                <div id="tertControl" class="mb-4 hidden">
+                    <label class="block text-xs font-bold text-amber-700 uppercase mb-1">2do Sustituyente en N (C):</label>
+                    <input type="range" id="tertCarbons" min="1" max="15" value="1" class="w-full accent-amber-600 cursor-pointer">
+                    <div class="text-right text-xs font-bold text-amber-700 mt-1"><span id="tertCount">1</span> Carbono (-metil)</div>
+                </div>
+            </div>
+
+            <!-- Panel de Resultado IUPAC -->
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 text-center">
+                <span class="text-[10px] font-extrabold uppercase tracking-wider text-blue-600 block">Nomenclatura IUPAC Oficial</span>
+                <div id="iupacName" class="text-lg font-black text-blue-900 mt-1 break-words">butan-1-amina</div>
+            </div>
+        </div>
+
+        <!-- Lienzo de Simulación Gráfica Estilo Esquemático Lineal -->
+        <div class="phet-container lg:col-span-3 flex flex-col items-center justify-between p-6 relative overflow-hidden bg-white">
+            <div class="w-full flex justify-between items-center border-b pb-2">
+                <span class="text-xs font-bold text-slate-400 uppercase">Estructura Molecular Lineal Interactiva</span>
+                <div class="flex space-x-2 text-xs text-slate-500 font-semibold">
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-blue-600 inline-block mr-1"></span> Carbono (C)</span>
+                    <span class="flex items-center"><span class="w-3 h-3 rounded-full bg-emerald-600 inline-block mr-1"></span> Nitrógeno (N)</span>
+                </div>
+            </div>
+
+            <!-- Contenedor central donde se dibujan las esferas y líneas en zigzag lineal -->
+            <div id="molecularCanvas" class="w-full flex flex-col items-center justify-center my-auto min-h-[300px] overflow-x-auto py-6 px-2">
+                <!-- Generado por Dinámica JS -->
+            </div>
+
+            <!-- Bandejas Estilo PhET (Inferior) -->
+            <div class="w-full grid grid-cols-3 gap-3 pt-4 border-t border-slate-100">
+                <div class="bg-blue-100 border border-blue-300 rounded-lg p-2 text-center shadow-inner">
+                    <span class="block text-[10px] font-bold text-blue-800 uppercase">Total Carbonos (C)</span>
+                    <span id="badgeCarbons" class="text-lg font-black text-blue-900">4</span>
+                </div>
+                <div class="bg-emerald-100 border border-emerald-300 rounded-lg p-2 text-center shadow-inner">
+                    <span class="block text-[10px] font-bold text-emerald-800 uppercase">Grupo Amino (-NH-)</span>
+                    <span id="badgeAmine" class="text-sm font-black text-emerald-900">Primaria (-NH₂)</span>
+                </div>
+                <div class="bg-amber-100 border border-amber-300 rounded-lg p-2 text-center shadow-inner">
+                    <span class="block text-[10px] font-bold text-amber-800 uppercase">Estado Enlace</span>
+                    <span class="text-xs font-black text-amber-900">Estable (Saturado)</span>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Barra Inferior PhET -->
+    <footer class="bg-slate-200 text-slate-600 text-center py-2 text-xs border-t border-slate-300 flex justify-center items-center space-x-4">
+        <span>Simulador Educativo de Química Orgánica PhET-Style</span>
+        <span>•</span>
+        <span>Desarrollado para VS Code & GitHub Pages</span>
+    </footer>
+
+    <!-- Lógica del Simulador para 30 Carbonos y Estructura Lineal -->
+    <script>
+        const prefixes = {
+            1: "met", 2: "et", 3: "prop", 4: "but", 5: "pent", 6: "hex", 7: "hept", 8: "oct", 9: "non", 10: "dec",
+            11: "undec", 12: "dodec", 13: "tridec", 14: "tetradec", 15: "pentadec", 16: "hexadec", 17: "heptadec", 18: "octadec", 19: "nonadec", 20: "icos",
+            21: "henicos", 22: "docos", 23: "tricos", 24: "tetracos", 25: "pentacos", 26: "hexacos", 27: "heptacos", 28: "octacos", 29: "nonacos", 30: "triacont"
+        };
+
+        const amineType = document.getElementById('amineType');
+        const mainCarbons = document.getElementById('mainCarbons');
+        const mainCount = document.getElementById('mainCount');
+        const secControl = document.getElementById('secControl');
+        const secCarbons = document.getElementById('secCarbons');
+        const secCount = document.getElementById('secCount');
+        const tertControl = document.getElementById('tertControl');
+        const tertCarbons = document.getElementById('tertCarbons');
+        const tertCount = document.getElementById('tertCount');
+        
+        const molecularCanvas = document.getElementById('molecularCanvas');
+        const iupacNameDiv = document.getElementById('iupacName');
+        const badgeCarbons = document.getElementById('badgeCarbons');
+        const badgeAmine = document.getElementById('badgeAmine');
+
+        function updateSimulation() {
+            const type = parseInt(amineType.value);
+            const cMain = parseInt(mainCarbons.value);
+            const cSec = parseInt(secCarbons.value);
+            const cTert = parseInt(tertCarbons.value);
+
+            mainCount.textContent = cMain;
+            secCount.textContent = cSec;
+            tertCount.textContent = cTert;
+            badgeCarbons.textContent = cMain;
+
+            // Mostrar / Ocultar controles según tipo
+            if (type === 1) {
+                secControl.classList.add('hidden');
+                tertControl.classList.add('hidden');
+                badgeAmine.textContent = "Primaria (-NH₂)";
+            } else if (type === 2) {
+                secControl.classList.remove('hidden');
+                tertControl.classList.add('hidden');
+                badgeAmine.textContent = "Secundaria (-NH-)";
+            } else {
+                secControl.classList.remove('hidden');
+                tertControl.classList.remove('hidden');
+                badgeAmine.textContent = "Terciaria (-N<)";
+            }
+
+            // Generar Nombre IUPAC exacto
+            let prefix = prefixes[cMain] || "carbon";
+            let mainSuffix = "";
+            
+            if (cMain === 1) mainSuffix = "metanamina";
+            else if (cMain === 2) mainSuffix = "etanamina";
+            else mainSuffix = `${prefix}an-1-amina`;
+
+            let name = "";
+            if (type === 1) {
+                name = mainSuffix;
+            } else if (type === 2) {
+                let pSec = prefixes[cSec] || "alquil";
+                name = `N-${pSec}il${mainSuffix}`;
+            } else if (type === 3) {
+                let pSec = prefixes[cSec] || "alquil";
+                let pTert = prefixes[cTert] || "alquil";
+                // Orden alfabético simple
+                if (cSec >= cTert) {
+                    name = `N-${pSec}il-N-${pTert}il${mainSuffix}`;
+                } else {
+                    name = `N-${pTert}il-N-${pSec}il${mainSuffix}`;
+                }
+            }
+            iupacNameDiv.textContent = name;
+
+            // Renderizado Gráfico Estilo Lineal (Zigzag / Secuencial adaptado para soportar hasta 30 carbonos fluidamente)
+            molecularCanvas.innerHTML = '';
+
+            // 1. Si es secundaria o terciaria, dibujar los grupos sustituyentes superiores unidos al N
+            if (type >= 2) {
+                const upperRow = document.createElement('div');
+                upperRow.className = "flex items-center justify-center gap-1 flex-wrap mb-4 bg-slate-50 p-3 rounded-xl border border-slate-200 w-full";
+                
+                // Sustituyente 1
+                for(let i=1; i<=cSec; i++) {
+                    const node = document.createElement('div');
+                    node.className = "w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center font-bold text-xs shadow";
+                    node.innerHTML = `C<sub>${i}</sub>`;
+                    upperRow.appendChild(node);
+                    if(i < cSec) {
+                        const line = document.createElement('div');
+                        line.className = "w-4 h-1 bg-slate-400";
+                        upperRow.appendChild(line);
+                    }
+                }
+
+                if(type === 3) {
+                    const sep = document.createElement('span');
+                    sep.className = "mx-3 font-bold text-slate-400 text-sm";
+                    sep.textContent = "+";
+                    upperRow.appendChild(sep);
+
+                    for(let i=1; i<=cTert; i++) {
+                        const node = document.createElement('div');
+                        node.className = "w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow";
+                        node.innerHTML = `C<sub>${i}</sub>`;
+                        upperRow.appendChild(node);
+                        if(i < cTert) {
+                            const line = document.createElement('div');
+                            line.className = "w-4 h-1 bg-slate-400";
+                            upperRow.appendChild(line);
+                        }
+                    }
+                }
+                molecularCanvas.appendChild(upperRow);
+
+                // Conector vertical hacia el Nitrógeno
+                const vLine = document.createElement('div');
+                vLine.className = "w-1 h-6 bg-slate-400 mb-1";
+                molecularCanvas.appendChild(vLine);
+            }
+
+            // 2. Nitrógeno central
+            const nNode = document.createElement('div');
+            nNode.className = "w-12 h-12 rounded-full bg-emerald-600 text-white flex flex-col items-center justify-center font-bold shadow-lg z-10 my-1";
+            nNode.innerHTML = `<span class="text-sm">N</span><span class="text-[8px] text-emerald-200">${type === 1 ? 'H₂' : (type === 2 ? 'H' : '')}</span>`;
+            molecularCanvas.appendChild(nNode);
+
+            // Conector vertical hacia la cadena principal
+            const vLine2 = document.createElement('div');
+            vLine2.className = "w-1 h-6 bg-slate-400 mt-1";
+            molecularCanvas.appendChild(vLine2);
+
+            // 3. Cadena principal de Carbonos (Soporta filas con wrap elegante para manejar los 30 carbonos ordenados)
+            const mainChainWrapper = document.createElement('div');
+            mainChainWrapper.className = "flex items-center justify-center gap-1 flex-wrap max-w-full px-2 py-4 bg-blue-50/50 rounded-2xl border border-blue-100";
+
+            for (let i = 1; i <= cMain; i++) {
+                const carbonItem = document.createElement('div');
+                carbonItem.className = "flex items-center my-1";
+
+                const cNode = document.createElement('div');
+                cNode.className = "w-9 h-9 rounded-full bg-blue-600 text-white flex flex-col items-center justify-center font-bold shadow text-xs";
+                cNode.innerHTML = `<span>C</span><span class="text-[7px] text-blue-200">${i}</span>`;
+                carbonItem.appendChild(cNode);
+
+                if (i < cMain) {
+                    const bond = document.createElement('div');
+                    bond.className = "w-5 h-1 bg-slate-400 mx-0.5";
+                    carbonItem.appendChild(bond);
+                }
+                mainChainWrapper.appendChild(carbonItem);
+            }
+            molecularCanvas.appendChild(mainChainWrapper);
+        }
+
+        amineType.addEventListener('change', updateSimulation);
+        mainCarbons.addEventListener('input', updateSimulation);
+        secCarbons.addEventListener('input', updateSimulation);
+        tertCarbons.addEventListener('input', updateSimulation);
+
+        updateSimulation();
+    </script>
+</body>
+</html>
